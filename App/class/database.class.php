@@ -2,9 +2,9 @@
 
 namespace App\class;
 
-use App\interface\Database as DBInterface;
+use App\interface\Database as DatabaseInterface;
 
-class Database implements DBInterface
+class Database implements DatabaseInterface
 {
     
 }

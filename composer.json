@@ -1,0 +1,17 @@
+{
+    "require": {
+        "vlucas/phpdotenv": "^5.4",
+        "robmorgan/phinx": "^0.12.12",
+        "ramsey/uuid": "^4.4"
+    },
+
+    "autoload": {
+        "classmap": [
+            "App/class/",
+            "App/interface/"
+            ],
+        "files": [
+            "inc/helpers.php"
+            ]
+    }
+}
