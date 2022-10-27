@@ -40,8 +40,9 @@ use App\class\Database;
 class CourierCost extends Database implements CalculatorInterface
 {
 
-    protected $cost_per_mile = 0;
-    protected $drop_offs = [];
+    private $cost_per_mile = 0;
+    private $drop_offs = [];
+    private $extra_person_price = 0;
 
 
     public function __construct()
@@ -51,7 +52,13 @@ class CourierCost extends Database implements CalculatorInterface
 
     public function calculate():Array{
 
-        return [];
+        return [
+            'cost_per_mile'=>$this->getCostPerMile(),
+            'total_drop_offs'=>count($this->getDropOffs()),
+            'total_distance'=> $this->totalDistance(),
+            'price_per_extra_person'=>$this->getExtraPersonPrice(),
+            'total_cost'=> $this->getCostPerMile() * $this->totalDistance()
+        ];
     }
 
     public function setDropOff($distance):void{
@@ -59,15 +66,34 @@ class CourierCost extends Database implements CalculatorInterface
     }
 
     public function getDropOffs():Array{
-        return $this->drop_offs;
+        return $this->drop_offs ?? [];
     }
 
-    public function setCostPerMile($cost = 1):void{
+    public function setCostPerMile($cost = 1.00){
         $this->cost_per_mile = $cost;
     }
 
     public function getCostPerMile():float{
-        return $this->cost_per_mile ?? 0;
+        return $this->cost_per_mile;
+    }
+
+    public function setExtraPersonPrice($extra = 15):void{
+        $this->extra_person_price = $extra;
+    }
+
+    public function getExtraPersonPrice():float{
+        return $this->extra_person_price ?? 0;
+    }
+
+    public function totalDistance():float{
+
+        return array_sum($this->getDropOffs());
+
+    }
+
+    public function plotRoute():Array{
+        //present best route to driver
+        return [];
     }
 
 }
