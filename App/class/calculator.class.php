@@ -5,6 +5,8 @@ namespace App\class;
 
 use App\interface\Calculator as CalculatorInterface;
 use App\class\Database;
+use App\class\Exception;
+
 
 // generate costs for a courier service.
 // calculator will calculate costs for a driver and their van undertaking a delivery job.
@@ -44,32 +46,57 @@ class CourierCost extends Database implements CalculatorInterface
     private $drop_offs = [];
     private $extra_person_price = 0;
 
-
     public function __construct()
     {
         //db connection
+
     }
 
-    public function calculate():Array{
+    public function calculate($extra_person = false, $pick_up_distance = 0):Array{
+
+        //can call these function with all the parameters
+
+        //check if drop off location is between 1 and 5
+
+
+        $drop_offs_count = count($this->getDropOffs());
+
+        if(1 > $drop_offs_count || $drop_offs_count > 5) return ["Error"=>"Invalid Drop off, value must be between 1 and 5"];
+
+        $total_cost = $this->getCostPerMile() * $this->totalDistance() * ($extra_person ? 2 : 1);
 
         return [
             'cost_per_mile'=>$this->getCostPerMile(),
-            'total_drop_offs'=>count($this->getDropOffs()),
+            'total_drop_offs'=>$drop_offs_count,
             'total_distance'=> $this->totalDistance(),
             'price_per_extra_person'=>$this->getExtraPersonPrice(),
-            'total_cost'=> $this->getCostPerMile() * $this->totalDistance()
+            'total_cost'=> $total_cost
         ];
     }
 
-    public function setDropOff($distance):void{
-        $this->drop_offs[] = $distance;
+    public function setDropOff($distance = 1):void{
+        
+        if(is_string($distance)) throw new \Exception("invalid distance set, distance can be array or single numberic [ float | int ] value - string given");
+
+        if(is_array($distance)){ 
+
+            array_merge($this->drop_offs,$distance);
+        }
+        elseif (is_numeric($distance)) { 
+
+            array_push($this->drop_offs,$distance);
+            
+        }else{
+            throw new \Exception("invalid distance set, distance can be array or single numberic [ float | int ] value ");
+        }
+
     }
 
     public function getDropOffs():Array{
         return $this->drop_offs ?? [];
     }
 
-    public function setCostPerMile($cost = 1.00){
+    public function setCostPerMile($cost = 1):void{
         $this->cost_per_mile = $cost;
     }
 
@@ -87,7 +114,7 @@ class CourierCost extends Database implements CalculatorInterface
 
     public function totalDistance():float{
 
-        return array_sum($this->getDropOffs());
+        return array_sum($this->getDropOffs()) ?? 0;
 
     }
 

@@ -14,9 +14,10 @@ $calculator = new CourierCost();
  * - distance in relation to pick up location
  * - distance in mile
  */
+$calculator->setDropOff(4);
 $calculator->setDropOff(10);
-$calculator->setDropOff(12);
 $calculator->setDropOff(14);
+
 
 $all_drop_offs = $calculator->getDropOffs();
 
@@ -24,6 +25,6 @@ $calculator->setCostPerMile(2.5);
 
 $calculator->setExtraPersonPrice();
 
-dd($calculator->calculate());
+dd($calculator->calculate(true));
 
 
