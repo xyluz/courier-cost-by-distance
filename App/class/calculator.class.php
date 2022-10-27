@@ -20,6 +20,7 @@ class CourierCost extends Database implements CalculatorInterface
     private $cost_per_mile = 0;
     private $drop_offs = [];
     private $extra_person_price = 0;
+    private $time_cost_per_mile_set = null;
 
     public function __construct()
     {
@@ -70,7 +71,10 @@ class CourierCost extends Database implements CalculatorInterface
             $total_cost = $this->getCostPerMile() * $this->totalDistance() + ($extra_person ? $this->getExtraPersonPrice() : 0);
 
             return [
-                'cost_per_mile'=>$this->getCostPerMile(),
+                'cost_data'=>[
+                    "price"=>$this->getCostPerMile(),
+                    "set_at"=>$this->time_cost_per_mile_set
+                ],
                 'total_drop_offs'=>$drop_offs_count,
                 'total_distance'=> $this->totalDistance(),
                 'cost_per_extra_person'=>$this->getExtraPersonPrice(),
@@ -128,6 +132,7 @@ class CourierCost extends Database implements CalculatorInterface
 
     public function setCostPerMile(float $cost = 1):void{
         $this->cost_per_mile = $cost;
+        $this->time_cost_per_mile_set = $this->dateTime();
     }
 
     /**
@@ -165,6 +170,10 @@ class CourierCost extends Database implements CalculatorInterface
 
         return array_sum($this->getDropOffs()) ?? 0;
 
+    }
+
+    public function dateTime(){
+        return date('m/d/Y h:i:s a', time());
     }
 
     /**
