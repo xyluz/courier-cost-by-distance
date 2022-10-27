@@ -21,6 +21,7 @@ class CourierCost extends Database implements CalculatorInterface
     private $drop_offs = [];
     private $extra_person_price = 0;
     private $time_cost_per_mile_set = null;
+    private $pick_up_location = 0; //distance to pick up location, if necessary
 
     public function __construct()
     {
@@ -43,6 +44,7 @@ class CourierCost extends Database implements CalculatorInterface
 
     public function calculate(
         Bool $extra_person = false, 
+        Bool $account_for_pick_up = false,
         array $drop_offs = null, 
         float $cost_per_mile = null, 
         float $cost_per_extra_person = null
@@ -68,7 +70,10 @@ class CourierCost extends Database implements CalculatorInterface
 
             if(1 > $drop_offs_count || $drop_offs_count > 5) return ["Error"=>"Invalid Drop off, value must be between 1 and 5"];
 
-            $total_cost = $this->getCostPerMile() * $this->totalDistance() + ($extra_person ? $this->getExtraPersonPrice() : 0);
+            $total_cost = $this->getCostPerMile() * 
+                                $this->totalDistance() + ($account_for_pick_up ? $this->getPickUpLocation() : 0) 
+                                + ($extra_person ? $this->getExtraPersonPrice() : 0);
+                            
 
             return [
                 'cost_data'=>[
@@ -109,6 +114,14 @@ class CourierCost extends Database implements CalculatorInterface
             throw new \Exception("invalid distance set, distance can be array or single numberic [ float | int ] value ");
         }
 
+    }
+
+    public function setPickUpLocation(float $distance_to_pickup):void{
+        $this->pick_up_location = $distance_to_pickup;
+    }
+
+    public function getPickUpLocation():float{
+        return $this->pick_up_location ?? 0;
     }
 
      /**
