@@ -7,37 +7,12 @@ use App\interface\Calculator as CalculatorInterface;
 use App\class\Database;
 use App\class\Exception;
 
-
-// generate costs for a courier service.
-// calculator will calculate costs for a driver and their van undertaking a delivery job.
-
-// Your module should factor in:
-// The distance between the pickup location and the drop-off location(s)
-// Anything between 1 and 5 drop-off locations
-// A cost per mile that won't be the same for every job
-// An optional cost for a second person to help the driver with the delivery job
-// The need for a consistent quote data structure that can be shared with other calculators and passed to other modules
-
-// The resulting pricing data should include the following items:
-// Number of drop-offs
-// Total distance
-// Cost per mile
-// Extra person price
-// Total price
-// Any other data you might think is relevant
-
 /**
- * Calcuator =>  [
- *      "pick-up-location"=>10m,
- *      "drop-offs"=>[
- *          a => 55 
- *          b => 13 
- *          c => 22 
- *      ],
- *      "cost-per-mile"=>1,
- *      "extra-person-price"=>15
- * ]
- */
+ * Main Calculator Class *CourierCost*
+ *
+ * This is the main class required for this assignment
+ * @author Seyi Onifade <xyluz>
+ */ 
 
 class CourierCost extends Database implements CalculatorInterface
 {
@@ -48,39 +23,79 @@ class CourierCost extends Database implements CalculatorInterface
 
     public function __construct()
     {
-        //db connection
+        parent::__construct();
+        //db connection - if needed
+        //authentication check if needed
 
     }
 
-    public function calculate($extra_person = false, $pick_up_distance = 0):Array{
+    /**
+     * Main calculate function
+     *
+     * @param Bool   $extra_person  set true if extra person is needed for delivery
+     * @param integer $repeat How many times something interesting should happen
+     * 
+     * @throws Error If invalid drop-off locations set
+     * @author Seyi Onifade <xyluz>
+     * @return Array
+     */ 
 
-        //can call these function with all the parameters
+    public function calculate(
+        Bool $extra_person = false, 
+        array $drop_offs = null, 
+        float $cost_per_mile = null, 
+        float $cost_per_extra_person = null
+        ):array {
 
-        //check if drop off location is between 1 and 5
+            if(isset($drop_offs)) {
+                //empty previous drop-offs if any, and reset
+                $this->drop_offs = [];
+                $this->setDropOff($drop_offs); 
+            } 
 
+            if(isset($cost_per_mile)) $this->setCostPerMile($cost_per_mile);
+            if(isset($cost_per_extra_person)) $this->setExtraPersonPrice($cost_per_extra_person);
 
-        $drop_offs_count = count($this->getDropOffs());
+            $drop_offs_count = count($this->getDropOffs());
 
-        if(1 > $drop_offs_count || $drop_offs_count > 5) return ["Error"=>"Invalid Drop off, value must be between 1 and 5"];
+            /** 
+             *  exclusively checking if drop-offs is between 1 and 5 --> alternatively, this checks if at least 1 drop-off is specified:
+             * 
+             *  if($drop_offs_count   < 1) return ["Error"=>"Invalid Drop off, at least 1 drop off value must be set"];
+             * */ 
+            
 
-        $total_cost = $this->getCostPerMile() * $this->totalDistance() * ($extra_person ? 2 : 1);
+            if(1 > $drop_offs_count || $drop_offs_count > 5) return ["Error"=>"Invalid Drop off, value must be between 1 and 5"];
 
-        return [
-            'cost_per_mile'=>$this->getCostPerMile(),
-            'total_drop_offs'=>$drop_offs_count,
-            'total_distance'=> $this->totalDistance(),
-            'price_per_extra_person'=>$this->getExtraPersonPrice(),
-            'total_cost'=> $total_cost
-        ];
+            $total_cost = $this->getCostPerMile() * $this->totalDistance() + ($extra_person ? $this->getExtraPersonPrice() : 0);
+
+            return [
+                'cost_per_mile'=>$this->getCostPerMile(),
+                'total_drop_offs'=>$drop_offs_count,
+                'total_distance'=> $this->totalDistance(),
+                'cost_per_extra_person'=>$this->getExtraPersonPrice(),
+                'total_cost'=> $total_cost,
+                'distances'=>$this->getDropOffs()
+            ];
     }
 
-    public function setDropOff($distance = 1):void{
+    /**
+     * Set Drop-Off Location
+     *
+     * @param Array|float   $distance  set drop-off locations using array of float or single float
+     * 
+     * @throws Exception If invalid drop-off data type
+     * @return Void
+     */ 
+
+    public function setDropOff(float|array $distance = 1):void{
         
-        if(is_string($distance)) throw new \Exception("invalid distance set, distance can be array or single numberic [ float | int ] value - string given");
+        if(is_string($distance)) throw new \Exception("invalid distance set, distance can be array or single numberic [ float | int ] value - " . gettype($distance)."  given");
 
         if(is_array($distance)){ 
 
-            array_merge($this->drop_offs,$distance);
+            $this->drop_offs =  array_merge($distance,$this->drop_offs);
+ 
         }
         elseif (is_numeric($distance)) { 
 
@@ -92,25 +107,59 @@ class CourierCost extends Database implements CalculatorInterface
 
     }
 
-    public function getDropOffs():Array{
+     /**
+     * Get Drop-Off Location
+     * 
+     * @author Seyi Onifade <xyluz>
+     * @return Array
+     */ 
+
+    public function getDropOffs():array{
         return $this->drop_offs ?? [];
     }
 
-    public function setCostPerMile($cost = 1):void{
+    /**
+     * Set Cost Per Mile Location
+     *
+     * @param float   $cost  set cost per mile in pounds
+     * 
+     * @return Void
+     */ 
+
+    public function setCostPerMile(float $cost = 1):void{
         $this->cost_per_mile = $cost;
     }
 
+    /**
+     * Get Drop-Off Location
+     *
+     * @return float
+     */ 
+
     public function getCostPerMile():float{
-        return $this->cost_per_mile;
+        return $this->cost_per_mile ?? 0;
     }
 
-    public function setExtraPersonPrice($extra = 15):void{
+    public function setExtraPersonPrice(float $extra = 15):void{
         $this->extra_person_price = $extra;
     }
+
+    /**
+     * Get Cost Per Extra Person
+     *
+     * @return float
+     */ 
 
     public function getExtraPersonPrice():float{
         return $this->extra_person_price ?? 0;
     }
+
+    /**
+     * Calculate Total Distance travelled in miles
+     *
+     * @return float
+     */ 
+
 
     public function totalDistance():float{
 
@@ -118,7 +167,13 @@ class CourierCost extends Database implements CalculatorInterface
 
     }
 
-    public function plotRoute():Array{
+    /**
+     * Plot Proposed Travel Route
+     *
+     * @return Array
+     */ 
+
+    public function plotRoute():array{
         //present best route to driver
         return [];
     }
