@@ -10,7 +10,7 @@ use App\class\Exception;
 /**
  * Main Calculator Class *CourierCost*
  *
- * This is the main class required for this assignment
+ * This is the main class required
  * @author Seyi Onifade <xyluz>
  */ 
 
